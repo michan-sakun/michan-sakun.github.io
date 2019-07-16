@@ -204,4 +204,14 @@ export class Othello {
 
         return rowStrings.join('\n');
     }
+
+    getWinner() {
+        if (this.blackScore === this.whiteScore) {
+            return null;
+        } else if (this.blackScore > this.whiteScore) {
+            return Player.BLACK;
+        } else {
+            return Player.WHITE;
+        }
+    }
 }

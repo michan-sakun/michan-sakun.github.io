@@ -12,9 +12,13 @@ const PIECE_OFFSET = 4;
 
 
 export class OthelloDrawer {
-    constructor(canvas, game, moveSender) {
+    constructor(canvas, gameTitleMessage, gameMessage, game, messages, moveSender) {
+        let that = this;
 
         this.canvas = canvas;
+        this.gameMessage = gameMessage;
+        this.gameTitleMessage = gameTitleMessage;
+        this.messages = messages;
 
         this.ctx = canvas.getContext('2d');
         this.game = game;
@@ -25,37 +29,38 @@ export class OthelloDrawer {
         this._lastX = -1;
         this._lastY = -1;
 
-        canvas.addEventListener('click', (event) => {
-            console.log(this.game.isMyTurn());
+        let getMousePosition = function (canvas, event) {
+            let rect = canvas.getBoundingClientRect();
+            let x = event.pageX - rect.left;
+            let y = event.pageY - rect.top;
+            let scale = 320 / canvas.offsetWidth;
+
+            return [x*scale, y*scale];
+        };
+
+        this.clickHanler = (event) => {
             if (!this.game.isMyTurn()) return;
 
             this.drawBoard();
-            let x = event.pageX - canvas.offsetLeft;
-            let y = event.pageY - canvas.offsetTop;
+            let [x, y] = getMousePosition(canvas, event);
 
             let [gx, gy] = this.findGrid(x, y);
             let placements = this.game.placeablesSet(this.game.currentPlayer);
-            console.log(placements, gx, gy);
 
             if (!placements.has(`${gx},${gy}`)) return;
-            console.log("yes");
             if (gx === -1) return;
 
             let cp = this.game.currentPlayer;
             this.game.place(gx, gy);
             moveSender(cp, gx, gy, this.game.isFinished());
-            this.drawBoard();
-        });
 
-        canvas.addEventListener('mousemove', (event) => {
+            this.drawBoard();
+        };
+
+        this.moveHandler = (event) => {
             if (!this.game.isMyTurn()) return;
 
-            let x = event.pageX - canvas.offsetLeft;
-            let y = event.pageY - canvas.offsetTop;
-            let scale = 320 / this.canvas.offsetWidth;
-
-            x *= scale;
-            y *= scale;
+            let [x, y] = getMousePosition(canvas, event);
             let [gx, gy] = this.findGrid(x, y);
 
             if (this._lastX === gx && this._lastY === gy) return;
@@ -68,7 +73,10 @@ export class OthelloDrawer {
             if (gx === -1 || !placements.has(`${gx},${gy}`)) return;
 
             this.drawLightPiece(...this.gridToXY(gx, gy), this.myColor);
-        });
+        };
+
+        canvas.addEventListener('click', this.clickHanler);
+        canvas.addEventListener('mousemove', this.moveHandler);
     }
 
     findGrid(x, y) {
@@ -119,7 +127,6 @@ export class OthelloDrawer {
 
         // hlines
         this.ctx.fillStyle = BLACK;
-        // todo replace with game.size
         for (let i = 1; i < size; i++) {
             this.ctx.beginPath();
             this.ctx.moveTo(OFFSET + BORDER       , OFFSET + BORDER + i * (SIDE / size));
@@ -128,7 +135,6 @@ export class OthelloDrawer {
         }
 
         // vlines
-        // todo replace with game.size
         for (let i = 1; i < size; i++) {
             this.ctx.beginPath();
             this.ctx.moveTo(OFFSET + BORDER + i * (SIDE / size), OFFSET + BORDER);
@@ -144,6 +150,9 @@ export class OthelloDrawer {
         }
 
         this.drawGameState();
+        let message = this.game.isMyTurn() ? this.messages.playMessage : this.messages.waitMessage;
+        this.updateText(`◯ ${this.game.whiteScore} - ${this.game.blackScore} ⬤`, message);
+        this.drawPlacementHelper();
     }
 
     drawGameState() {
@@ -158,6 +167,22 @@ export class OthelloDrawer {
         }
     }
 
+    drawPlacementHelper() {
+        if (!this.game.isMyTurn()) return;
+
+        let placeables = this.game.placeables(this.game.player);
+
+        this.ctx.fillStyle = OthelloDrawer.getPieceColor(this.game.player);
+        this.ctx.globalAlpha = 0.5;
+
+        for(let [gx, gy] of placeables) {
+            let [x, y] = this.gridToXY(gx, gy);
+            this.drawCircle(x, y, 2);
+        }
+
+        this.ctx.globalAlpha = 1;
+    }
+
     static getPieceColor(piece) {
         return piece === Piece.BLACK ? BLACK : WHITE;
 
@@ -167,5 +192,15 @@ export class OthelloDrawer {
         this.ctx.beginPath();
         this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
         this.ctx.fill();
+    }
+
+    updateText(titleMessage, message) {
+        this.gameTitleMessage.innerText = titleMessage;
+        this.gameMessage.innerText = message;
+    }
+
+    removeListeners() {
+        this.canvas.removeEventListener("click", this.clickHanler);
+        this.canvas.removeEventListener("mousemove", this.moveHandler);
     }
 }

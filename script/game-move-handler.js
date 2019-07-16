@@ -1,7 +1,9 @@
+import {SERVER_NAME} from './setting.js'
+
 export class GameMoveHandler{
 
     constructor() {
-        this.collection = firebase.firestore().collection('games');
+        this.collection = firebase.firestore().collection(SERVER_NAME + 'games');
         this.gameId = null;
 
         this.moveSubscriber = null;
@@ -9,7 +11,6 @@ export class GameMoveHandler{
     }
 
     sendMove(playerColor, x, y) {
-        console.log("sending move to server", this.gameId);
         return this.collection.doc(this.gameId).collection('moves').add({
             color: playerColor,
             x: x,
@@ -43,7 +44,6 @@ export class GameMoveHandler{
         let request = this.collection.doc(this.gameId).update({
             finished: true,
         }).then(result => {
-            that.gameId = null;
             return result;
         });
     }
@@ -102,7 +102,7 @@ export class GameMoveHandler{
             let gameFinishSubscriber = that.collection.orderBy('timestamp', 'desc').limit(1)
                 .onSnapshot(function(snapshot) {
                     snapshot.docChanges().forEach(function(change) {
-                        if (change.type === "modified" && change.doc.id === that.gameID) {
+                        if (change.type === "modified" && change.doc.id === that.gameId) {
                             gameFinishSubscriber();
                             resolve();
                         }

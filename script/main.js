@@ -2,17 +2,19 @@
 import {User} from './user.js'
 import {MessageHandler} from './messege-handler.js'
 import {GameManager} from './game-manager.js'
+import {USER_SELECTION, PICK_GAME_MODE, PICK_COLOR, white, black} from './setting-jp.js';
 
+const user1 = "さーくん";
+const user2 = "みーちゃん";
 
-let user1 = "さーくん";
-let user2 = "みーちゃん";
-let six = "6x6";
-let white = "白（先攻）";
+const six = "6x6";
 
 let user = null;
 
 let mHandler = undefined;
 let canvas = document.getElementById('othello-board');
+let gameTitleMessage = document.getElementById('game-title-message');
+let gameMessage = document.getElementById('game-message');
 
 function main() {
     return userSelection().then(myUser => {
@@ -23,8 +25,38 @@ function main() {
 }
 
 function mainLoop(){
-    let gm = new GameManager(canvas, user, gameModeSelection, colorSelection);
-    return gm.start().then(() => {
+    let gm = new GameManager(canvas, gameTitleMessage, gameMessage, user, gameModeSelection, colorSelection);
+    return gm.start().then((winner) => {
+        let titleMessage = null;
+        let message = null;
+
+        if (user.getName() === user1) {
+            if (winner === null) {
+                titleMessage = "引き分けだよ～";
+                message =　"仲好し～";
+            } else if (winner === gm.game.player) {
+                titleMessage = "さーくんの勝利！！";
+                message = "次も本気だよ！";
+            } else {
+                titleMessage = "さーくんの負けだよ...";
+                message = "元気だして～";
+            }
+
+        } else {
+            if (winner === null) {
+                titleMessage = "引き分けだよ～";
+                message =　"仲好しだね♥";
+            } else if (winner === gm.game.player) {
+                titleMessage = "みーちゃん勝利！！";
+                message = "まさかこんな日がくるなんて！";
+            } else {
+                titleMessage = "みーちゃんの負けだよ...";
+                message = "次は勝てるよ♥";
+            }
+        }
+        return gameFinishModal(titleMessage, message);
+
+    }).then(() => {
         return mainLoop();
     });
 }
@@ -39,23 +71,25 @@ function setUpMessaging(user) {
 
 main();
 
-
 function userSelection() {
-    return twoButtonModal("あなたは誰ですか？", user1, user2, '#b9d4ff', '#ffd0d9').then( (selection) => {
+    return twoButtonModal(USER_SELECTION, user1, user2, '#b9d4ff', '#ffd0d9').then( (selection) => {
         if (selection === undefined) return userSelection();
-        return new User(selection, selection === user2);
+        return new User(
+            selection,
+            selection === user2,
+            selection === user1 ? user2: user1);
     })
 }
 
 function gameModeSelection() {
-    return twoButtonModal("ゲームモード選択！", six, "8x8", '#fffdd9', '#dbceff').then((selection) => {
+    return twoButtonModal(PICK_GAME_MODE, six, "8x8", '#fffdd9', '#dbceff').then((selection) => {
         if (selection === undefined) return gameModeSelection();
         return selection === six ? 6 : 8;
     });
 }
 
 function colorSelection() {
-    return twoButtonModal("どっちの色がいい？", white, "黒（後攻）", '#fafbf9', '#c9c6c9').then((selection) => {
+    return twoButtonModal(PICK_COLOR, white, black, '#fafbf9', '#c9c6c9').then((selection) => {
         if (selection === undefined) return colorSelection();
         return selection === white ? "white" : "black";
     });
@@ -98,14 +132,22 @@ function twoButtonModal(title, textLeft, textRight, colorLeft, colorRight) {
     });
 }
 
+function gameFinishModal(titleMessage, message) {
+    return Swal.fire({
+            title: titleMessage,
+            text: message,
+            confirmButtonText: '次のゲームへ！',
+        })
+}
+
 /* Message related functions */
 
 function displayMessage(id, timestamp, name, text) {
     let html = undefined;
     if (timestamp === null) return;
 
-    let date = new Date();
-    let dateString = moment(timestamp.seconds * 1000).format("h:mm a");
+    let date = moment(timestamp.seconds * 1000);
+    let dateString = date.format("h:mm a");
 
     if (name === user.getName()) {
         html = `
@@ -124,7 +166,18 @@ function displayMessage(id, timestamp, name, text) {
             </div>
         </div>`
     }
-    document.getElementById("msg_history").insertAdjacentHTML('beforeend', html)
+
+    let msg_history = document.getElementById("msg_history");
+    let lastMessage = msg_history.lastElementChild;
+
+    if (lastMessage === null || lastMessage.date < date) { // append to last
+        msg_history.insertAdjacentHTML('beforeend', html);
+        msg_history.lastElementChild.date = date;
+    } else { // append in the beginning
+        msg_history.insertAdjacentHTML('afterbegin', html);
+        msg_history.firstElementChild.date = date;
+    }
+
 }
 
 

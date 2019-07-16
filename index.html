@@ -8,20 +8,29 @@
     <link rel="stylesheet" type="text/css" href="style.css">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
+    <!--<title>Othello</title>-->
     <title>オセロだよ！</title>
+
 </head>
 <body>
-<div class="container" id="container">
-    <div class="row">
-        <div class="col-md-6"> <!--othello container-->
+<div class="container " id="container">
+    <div class="row container-scroll" >
+        <div class="col-6"> <!--othello container-->
+            <p id="game-title-message" class="text-center font-weight-bold">
+                待機中...
+            </p>
             <canvas id="othello-board" class="img-responsive" width="320" height="320"></canvas>
+            <p id="game-message" class="text-center font-weight-bold">
+
+            </p>
         </div>
 
-        <div class="inbox_msg col-md-6 d-flex flex-column vh-100 " >
-            <div class="row overflow-auto msg_history justify-content-center bg-purple flex-grow-1" id="msg_history">
+        <div class="inbox_msg col-6 d-flex flex-column vh-100 ">
+            <div class=" overflow-auto msg_history justify-content-center bg-purple flex-grow-1" id="msg_history">
+                <!--<div style="height: 500px; background: blue"></div>-->
             </div>
 
-            <div class="row justify-content-center bg-blue">
+            <div class="row justify-content-center">
                 <div class="l-2 r-2 col-12 type_msg">
                     <div class="input_msg_write">
                         <input id="text_message" type="text" class="write_msg" placeholder="Type a message" />
@@ -39,9 +48,9 @@
 
 </script>
 <style type="text/css">
-    canvas {
-        border: 1px solid #999;
-    }
+    /*canvas {*/
+        /*border: 1px solid #999;*/
+    /*}*/
 </style>
 
 
@@ -54,9 +63,9 @@
     <script src="https://www.gstatic.com/firebasejs/6.2.4/firebase-messaging.js"></script>
     <script src="https://www.gstatic.com/firebasejs/6.2.4/firebase-firestore.js"></script>
 
-    <script src="firebase-init.js"></script>
+    <script src="script/firebase-init.js"></script>
 
-    <script type="module" src="main.js"></script>
+    <script type="module" src="script/main.js"></script>
 
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
