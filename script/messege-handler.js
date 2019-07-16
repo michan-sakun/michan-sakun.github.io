@@ -1,4 +1,4 @@
-import {SERVER_NAME} from './setting.js'
+import {SERVER_NAME} from './setting-jp.js'
 
 export class MessageHandler{
 
