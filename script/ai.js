@@ -44,7 +44,7 @@ export class AI{
         let g = this.game;
 
         if (depth === 0 || g.isFinished()) {
-            return [this.heuristics(), []]
+            return [this.heuristics(this.maximizingPlayer), []]
         }
 
         let scoreMovePairs = [];
@@ -93,8 +93,7 @@ export class AI{
     alphaBeta(alpha, beta, depth) {
         let g = this.game;
         if (depth === 0 || g.isFinished()) {
-            let multiplier = (g.currentPlayer === this.maximizingPlayer) * 2 - 1;
-            return [multiplier * this.heuristics(), []]
+            return [this.heuristics(this.maximizingPlayer), []]
         }
 
         let bestMoves = null;
@@ -141,7 +140,26 @@ export class AI{
         return [bestScore, bestMoves]
     }
 
-    heuristics() {
+    heuristics(player) {
+        // heuristic value in respect to the player.
+        let h = this.heuristics_inner();
+        let multiplier = (player === Player.WHITE) * 2 - 1;
+        return h * multiplier;
+    }
+
+    heuristics_inner() {
+        // positive value when white is winning and black is losing
+        if (this.game.isFinished()) {
+            switch (this.game.getWinner()) {
+                case Player.WHITE:
+                    return Infinity;
+                case Player.BLACK:
+                    return -Infinity;
+                default:
+                    return 0;
+            }
+        }
+
         let g = this.game;
         let board = g.board;
         let blackScore = g.blackScore;
@@ -168,7 +186,7 @@ export class AI{
 
         return 7 * corners.reduce(pieceReducer, 0)
             + 2 * corner_helpers.reduce(pieceReducer, 0)
-            + blackScore - whiteScore;
+            + whiteScore - blackScore;
     }
 
 }
