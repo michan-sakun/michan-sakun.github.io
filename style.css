@@ -21,8 +21,49 @@ canvas {
     display: flex;
 }
 
-.snap-container div {
+.snap-container > div {
     scroll-snap-align: center;
-    /*background: blanchedalmond;*/
-
 }
+
+* {overflow-y: hidden;}
+
+@media (max-width: 767px) {
+
+    .container-scroll {
+        width: calc(200% + 60px);
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+
+    }
+
+    .container-scroll > div{
+        padding: 2px;
+        scroll-snap-align: start;
+    }
+}
+
+
+#game-title-message {
+    font-size: x-large;
+    margin-bottom: 0;
+}
+
+/*Circular Buttons*/
+.btn-circle {
+    width:2rem;
+    height:2rem;
+    padding: 0 !important;
+}
+
+/*Button fill*/
+.btn-primary, .btn-info, .btn-secondary{
+    fill: white;
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
+.btn-primary {
+    box-shadow: 0 0 6px #5890eb;
+}
+

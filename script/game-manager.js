@@ -3,18 +3,43 @@ import {Othello} from './othello.js';
 import {GameMoveHandler} from './game-move-handler.js'
 
 export class GameManager {
-    constructor(canvas, user, gameModeSelector, colorSelector) {
+    constructor(canvas, gameTitleMessage, gameMessage, user, gameModeSelector, colorSelector, backButton, aiButton) {
         this.canvas = canvas;
         this.user = user;
         this.gameModeSelector = gameModeSelector;
         this.colorSelector = colorSelector;
+        this.gameTitleMessage = gameTitleMessage;
+        this.gameMessage = gameMessage;
 
         this.gmh = new GameMoveHandler();
+
+        this.messages = {
+            playMessage: this.user.getName() + 'の番だよ～',
+            waitMessage: this.user.getOtherUserName() + '考え中...'
+        };
+
+        backButton.onclick = () => {
+            // send remove a move message
+        };
+
+        this.aiButton = aiButton;
+
+        let prevHandler = aiButton.onclick;
+        let that = this;
+        aiButton.onclick = () => {
+            prevHandler();
+            if (aiButton.active) {
+                this.od.startAI();
+            } else {
+                this.od.quitAI();
+            }
+
+
+        }
     }
 
     start() {
         let that = this;
-        let done = false;
         return new Promise(resolve => {
             // create Othello objects
             if (that.user.isMain) {
@@ -22,21 +47,31 @@ export class GameManager {
             } else {
                 return resolve(that.creatorWaiter());
             }
+
         }).then(game => {
             // Add listeners
-            that.od = new OthelloDrawer(that.canvas, that.game, (a, b, c, d) => that.moveSender(a, b, c, d, that));
-            that.od.drawBoard();
+            that.od = new OthelloDrawer(
+                that.canvas,
+                that.gameTitleMessage,
+                that.gameMessage,
+                that.game,
+                that.messages,
+                (a, b, c, d) => that.moveSender(a, b, c, d, that));
+            that.od.draw();
 
             that.gmh.setMoveListener((x, y) => {
-                console.log(x, y);
                 that.game.place(x, y);
-                that.od.drawBoard();
+                that.od.updateAgent();
+                if (that.aiButton.active) that.od.startAI();
+                that.od.draw();
             });
 
             return that.gmh.gameCompleted();
         }).then(() => {
-            // end of game clean up
+            // clean ups
             that.gmh.unsubscribeMoves();
+            that.od.removeListeners();
+            return that.game.getWinner();
         });
     }
 
@@ -49,10 +84,10 @@ export class GameManager {
     creatorStarter() {
         let that = this;
         return this.gmh.getLastGame().then(doc => {
-            let data = doc.data();
-            if (data === null || data.finished) {
+            if (doc === null || doc.data().finished) {
                 return that.promptNewGameSetting();
             }
+            let data = doc.data();
             that.gmh.gameId = doc.id;
             return that.game = new Othello(data.creatorColor, data.gameSize);
         });

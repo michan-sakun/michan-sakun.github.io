@@ -1,8 +1,10 @@
+import {SERVER_NAME} from './setting-jp.js'
+
 export class MessageHandler{
 
     constructor(user) {
         this.user = user;
-        this.collection = firebase.firestore().collection('messages');
+        this.collection = firebase.firestore().collection(SERVER_NAME + 'messages');
     }
 
     sendMessage(messageText) {

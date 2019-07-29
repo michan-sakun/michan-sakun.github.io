@@ -29,6 +29,16 @@ export class Othello {
         }
     }
 
+    static copy(game) {
+        let copy = new Othello(game.playerColorString, game.size);
+        copy.currentPlayer = game.currentPlayer;
+        copy.changeHistory = game.changeHistory.slice();
+        copy.board = game.board.map(function(arr) {
+            return arr.slice();
+        });
+        return copy;
+    }
+
     place(x, y) {
         if (this.board[x][y] !== undefined) return;
 
@@ -81,13 +91,13 @@ export class Othello {
         // update history
         this.changeHistory.push([this.currentPlayer, [x, y], flipped]);
 
-        // update player
-        let otherPlayer = Othello.otherPlayer(this.currentPlayer);
-        if (this.placeables(otherPlayer).length !== 0) this.currentPlayer = otherPlayer;
-
         // update cache
         this._positions = {};
         this._positionsSet = {};
+
+        // update player
+        let otherPlayer = Othello.otherPlayer(this.currentPlayer);
+        if (this.placeables(otherPlayer).length !== 0) this.currentPlayer = otherPlayer;
 
 
         return flipped;
@@ -170,6 +180,10 @@ export class Othello {
     undo() {
         if (this.changeHistory.length === 0) return false;
 
+        // update cache
+        this._positions = {};
+        this._positionsSet = {};
+
         let [player, lastmove, flipped] = this.changeHistory.pop();
         let [x, y] = lastmove;
         let otherPlayer = Othello.otherPlayer(player);
@@ -177,6 +191,14 @@ export class Othello {
 
         this.board[x][y] = undefined;
         this.currentPlayer = player;
+
+        if (player === Player.WHITE) {
+            this.whiteScore -= 1 + flipped.length;
+            this.blackScore += flipped.length;
+        } else {
+            this.blackScore -= 1 + flipped.length;
+            this.whiteScore += flipped.length;
+        }
 
 
         for (let [xx, yy] of flipped) {
@@ -203,5 +225,15 @@ export class Othello {
         }
 
         return rowStrings.join('\n');
+    }
+
+    getWinner() {
+        if (this.blackScore === this.whiteScore) {
+            return null;
+        } else if (this.blackScore > this.whiteScore) {
+            return Player.BLACK;
+        } else {
+            return Player.WHITE;
+        }
     }
 }
