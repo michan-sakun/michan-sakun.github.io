@@ -3,7 +3,8 @@ import {Othello} from './othello.js';
 import {GameMoveHandler} from './game-move-handler.js'
 
 export class GameManager {
-    constructor(canvas, gameTitleMessage, gameMessage, user, gameModeSelector, colorSelector, backButton, aiButton) {
+    constructor(canvas, gameTitleMessage, gameMessage, user, gameModeSelector,
+                colorSelector, backButton, aiButton, opponentAiInfo, myAiInfo) {
         this.canvas = canvas;
         this.user = user;
         this.gameModeSelector = gameModeSelector;
@@ -11,30 +12,60 @@ export class GameManager {
         this.gameTitleMessage = gameTitleMessage;
         this.gameMessage = gameMessage;
 
-        this.gmh = new GameMoveHandler();
+        let aiInfoHandler = (p1On, p2On) => {
+            let myOn = false;
+            let opOn = false;
+
+            if (this.user.isMain) {
+                myOn = p1On;
+                opOn = p2On;
+            } else {
+                myOn = p2On;
+                opOn = p1On;
+            }
+
+            if (myOn) {
+                myAiInfo.classList.remove("ai-disabled");
+            } else {
+                myAiInfo.classList.add("ai-disabled");
+            }
+
+            if (opOn) {
+                opponentAiInfo.classList.remove("ai-disabled");
+            } else {
+                opponentAiInfo.classList.add("ai-disabled");
+            }
+        };
+
+        this.gmh = new GameMoveHandler(aiInfoHandler);
 
         this.messages = {
             playMessage: this.user.getName() + 'の番だよ～',
-            waitMessage: this.user.getOtherUserName() + '考え中...'
-        };
-
-        backButton.onclick = () => {
-            // send remove a move message
+            waitMessage: this.user.getOpponentName() + '考え中...'
         };
 
         this.aiButton = aiButton;
 
         let prevHandler = aiButton.onclick;
-        let that = this;
+
         aiButton.onclick = () => {
             prevHandler();
             if (aiButton.active) {
                 this.od.startAI();
+                this.gmh.updateAiInfo(this.user.isMain, true);
             } else {
                 this.od.quitAI();
+                this.gmh.updateAiInfo(this.user.isMain, false);
             }
+        };
 
-
+        backButton.onclick = () => {
+            console.log('back button');
+            if(this.game.undo() !== false) { //since player.Black === 0, we need to check whether it is actually false
+                console.log('back success');
+                this.od.draw();
+                this.gmh.deleteLastMove();
+            }
         }
     }
 
@@ -59,12 +90,21 @@ export class GameManager {
                 (a, b, c, d) => that.moveSender(a, b, c, d, that));
             that.od.draw();
 
-            that.gmh.setMoveListener((x, y) => {
+            let newMoveHandler = (x, y) => {
                 that.game.place(x, y);
                 that.od.updateAgent();
                 if (that.aiButton.active) that.od.startAI();
                 that.od.draw();
-            });
+            };
+
+            let deleteMoveHandler = (x, y) => {
+                that.game.undoMove(x, y);
+                that.od.quitAI();
+                if (that.aiButton.active) that.od.startAI();
+                that.od.draw();
+            };
+
+            that.gmh.setMoveListener(newMoveHandler, deleteMoveHandler);
 
             return that.gmh.gameCompleted();
         }).then(() => {

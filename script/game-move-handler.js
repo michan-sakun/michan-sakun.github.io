@@ -1,16 +1,19 @@
 import {SERVER_NAME} from './setting-jp.js'
+import {Player} from './othello.js'
 
 export class GameMoveHandler{
 
-    constructor() {
+    constructor(aiUpdateHandler) {
         this.collection = firebase.firestore().collection(SERVER_NAME + 'games');
         this.gameId = null;
 
         this.moveSubscriber = null;
         this.newGameSubscriber = null;
+        this.aiUpdateHandler = aiUpdateHandler;
     }
 
     sendMove(playerColor, x, y) {
+        console.log("sending move", x, y, playerColor);
         return this.collection.doc(this.gameId).collection('moves').add({
             color: playerColor,
             x: x,
@@ -20,8 +23,18 @@ export class GameMoveHandler{
     }
 
     deleteLastMove() {
-        // lastMove
-        // delete move
+        let that = this;
+
+        return this.collection.doc(this.gameId).collection('moves')
+            .orderBy('timestamp', 'desc')
+            .limit(1)
+            .get()
+            .then(docs => {
+                docs.forEach(doc => {
+                    doc.ref.delete();
+                });
+            });
+
     }
 
     createGame(creatorColor, size) {
@@ -31,6 +44,8 @@ export class GameMoveHandler{
             gameSize: size,
             creatorColor: creatorColor,
             finished: false,
+            p1ai: false,
+            p2ai: false,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         }).then(docRef => {
             that.gameId = docRef.id;
@@ -48,6 +63,18 @@ export class GameMoveHandler{
         });
     }
 
+    updateAiInfo(isCreator, isUsing) {
+        let that = this;
+        let statusTag = isCreator ? "p1ai" : "p2ai";
+        let updateDict = {};
+        updateDict[statusTag] = isUsing;
+
+        let request = this.collection.doc(this.gameId).update(updateDict)
+            .then(result => {
+                return result;
+            });
+    }
+
     getLastGame() {
         let query = this.collection
             .orderBy('timestamp', 'desc')
@@ -62,17 +89,22 @@ export class GameMoveHandler{
         });
     }
 
-    setMoveListener(handler) {
+    setMoveListener(newMoveHandler, deleteMoveHandler) {
         this.moveSubscriber = this.collection
             .doc(this.gameId)
             .collection('moves')
             .orderBy('timestamp')
             .onSnapshot(snapshot => {
-                snapshot.forEach(doc => {
-                    let data = doc.data();
-                    if (data.timestamp === null) return;
+                snapshot.docChanges().forEach((change) => {
+                    let data = change.doc.data();
+                    console.log(`-- ct: ${change.type}, x:${data.x} y:${data.y}`);
+                    if (change.type === "added") {
+                        if (data.timestamp === null) return;
+                        newMoveHandler(data.x, data.y);
 
-                    handler(data.x, data.y);
+                    } else if (change.type === "removed") {
+                        deleteMoveHandler(data.x, data.y);
+                    }
                 })
             });
     }
@@ -100,11 +132,18 @@ export class GameMoveHandler{
         let that = this;
         return new Promise(resolve => {
             let gameFinishSubscriber = that.collection.orderBy('timestamp', 'desc').limit(1)
-                .onSnapshot(function(snapshot) {
-                    snapshot.docChanges().forEach(function(change) {
+                .onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        console.log("udpated");
                         if (change.type === "modified" && change.doc.id === that.gameId) {
-                            gameFinishSubscriber();
-                            resolve();
+                            let data = change.doc.data();
+                            if (data.finished) {
+                                gameFinishSubscriber();
+                                resolve();
+                            } else {
+
+                                that.aiUpdateHandler(data.p1ai, data.p2ai);
+                            }
                         }
                     });
                 });

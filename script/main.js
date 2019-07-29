@@ -23,6 +23,10 @@ const backButton = document.getElementById('back-btn');
 const aiButton = document.getElementById('ai-btn');
 const messageButton = document.getElementById('msg-btn');
 
+const opponentAiInfo = document.getElementById('opponent-ai-info');
+const myAiInfo = document.getElementById('my-ai-info');
+
+
 aiButton.onclick = () => {
     if (!aiButton.active) {
         aiButton.active = true;
@@ -39,6 +43,9 @@ aiButton.onclick = () => {
 function main() {
     return userSelection().then(myUser => {
         user = myUser;
+        opponentAiInfo.innerHTML = `${user.getOpponentName()}助けられ中`;
+        myAiInfo.innerHTML = `${user.getName()}助けられ中`;
+
         setUpMessaging(user);
         return mainLoop();
     })
@@ -53,7 +60,9 @@ function mainLoop(){
         gameModeSelection,
         colorSelection,
         backButton,
-        aiButton
+        aiButton,
+        opponentAiInfo,
+        myAiInfo
     );
     return gm.start().then((winner) => {
         let titleMessage = null;

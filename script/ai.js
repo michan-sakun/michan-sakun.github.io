@@ -152,9 +152,9 @@ export class AI{
         if (this.game.isFinished()) {
             switch (this.game.getWinner()) {
                 case Player.WHITE:
-                    return Infinity;
+                    return 100;
                 case Player.BLACK:
-                    return -Infinity;
+                    return -100;
                 default:
                     return 0;
             }

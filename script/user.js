@@ -9,7 +9,7 @@ export class User{
         return this.name;
     }
 
-    getOtherUserName() {
+    getOpponentName() {
         return this.otherUserName;
     }
 }

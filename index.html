@@ -13,12 +13,16 @@
 
 </head>
 <body>
-<div class="container " id="container">
-    <div class="row container-scroll" >
+
+<div class="container" id="container">
+
+    <div class="row container-scroll mt-2" >
         <div class="col-6"> <!--othello container-->
-            <p id="game-title-message" class="text-center font-weight-bold">
-                待機中...
-            </p>
+            <div class="d-flex align-items-end justify-content-between">
+                <p id="opponent-ai-info" class="ml-3 mb-0 text-left ai-info ai-disabled"></p>
+                <p id="game-title-message" class="text-center font-weight-bold">待機中...</p>
+                <p id="my-ai-info" class="mr-3 mb-0 text-right ai-info ai-disabled"></p>
+            </div>
             <canvas id="othello-board" class="img-responsive" width="320" height="320"></canvas>
             <div class="row">
                 <div class="col-3 pr-0" style="min-width:69px">

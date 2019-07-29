@@ -49,6 +49,16 @@ canvas {
     margin-bottom: 0;
 }
 
+.ai-info {
+    color: skyblue;
+    font-weight: bold;
+    font-size: small;
+}
+
+.ai-disabled {
+    opacity: 0;
+}
+
 /*Circular Buttons*/
 .btn-circle {
     width:2rem;

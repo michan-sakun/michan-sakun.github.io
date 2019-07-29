@@ -208,6 +208,17 @@ export class Othello {
         return this.currentPlayer;
     }
 
+    undoMove(x, y) {
+        if (this.changeHistory.length === 0) return false;
+
+        let lastMove = this.changeHistory[this.changeHistory.length - 1][1];
+        if (lastMove[0] === x && lastMove[1] === y) return this.undo();
+
+        return false;
+    }
+
+
+
     isMyTurn() {
         return this.currentPlayer === this.player;
     }
