@@ -1,8 +1,8 @@
 import {Othello, Piece, Player} from './othello.js';
 import {AI} from './ai.js'
 
-const GREEN = '#51A04F';
-const BLACK = '#2e2e2e';
+const GREEN = '#eeafc5';
+const BLACK = '#d763dd';
 const WHITE = '#fafafa';
 
 const SIDE = 300;
@@ -181,6 +181,7 @@ export class OthelloDrawer {
 
         // hlines
         this.ctx.fillStyle = BLACK;
+        this.ctx.strokeStyle = BLACK;
         for (let i = 1; i < size; i++) {
             this.ctx.beginPath();
             this.ctx.moveTo(OFFSET + BORDER       , OFFSET + BORDER + i * (SIDE / size));
